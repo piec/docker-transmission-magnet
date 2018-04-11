@@ -1,0 +1,86 @@
+# Maintainer: Carlo Landmeter <clandmeter@gmail.com>
+pkgname=transmission
+pkgver=2.93
+pkgrel=0
+pkgdesc="Lightweight GTK BitTorrent client"
+url="http://www.transmissionbt.com"
+install="transmission-daemon.pre-install transmission-daemon.post-upgrade"
+arch="all !s390x"
+license="MIT"
+depends=""
+pkgusers="transmission"
+pkggroups="transmission"
+makedepends="libressl-dev curl-dev gtk+3.0-dev intltool libevent-dev
+	libnotify-dev dbus-glib-dev autoconf automake tar gconf-dev
+	bsd-compat-headers"
+source="https://github.com/transmission/$pkgname-releases/raw/master/$pkgname-$pkgver.tar.xz
+	transmission-daemon.initd
+	transmission-daemon.confd
+	libressl.patch
+	magnet.patch"
+subpackages="$pkgname-cli $pkgname-daemon $pkgname-doc $pkgname-lang"
+options="!checkroot !check"
+builddir="$srcdir/$pkgname-$pkgver"
+
+build() {
+        cd "$builddir"
+
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--enable-utp \
+		--with-inotify \
+		--enable-cli \
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
+}
+
+package() {
+        cd "$builddir"
+        make DESTDIR="$pkgdir" install
+}
+
+daemon() {
+	pkgdesc="Lightweight BitTorrent client (daemon and webinterface)"
+
+	install -d "$subpkgdir"/usr/share \
+		"$subpkgdir"/usr/bin
+	install -d -o transmission -g transmission \
+		"$subpkgdir"/var/lib/transmission \
+		"$subpkgdir"/var/log/transmission
+	mv "$pkgdir"/usr/bin/transmission-daemon \
+		"$subpkgdir"/usr/bin/
+	mv "$pkgdir"/usr/share/transmission \
+		"$subpkgdir"/usr/share/
+        install -D -m755 "$srcdir"/transmission-daemon.initd \
+		"$subpkgdir"/etc/init.d/transmission-daemon
+        install -D -m644 "$srcdir"/transmission-daemon.confd \
+		"$subpkgdir"/etc/conf.d/transmission-daemon
+}
+
+cli() {
+	pkgdesc="Lightweight BitTorrent client (cli and remote)"
+
+	install -d "$subpkgdir"/usr/bin
+	mv "$pkgdir"/usr/bin/transmission-cli \
+		"$pkgdir"/usr/bin/transmission-create \
+		"$pkgdir"/usr/bin/transmission-edit \
+		"$pkgdir"/usr/bin/transmission-show \
+		"$pkgdir"/usr/bin/transmission-remote \
+		"$subpkgdir"/usr/bin/
+}
+
+sha512sums="7565893f67fc10f1b683814fa4d365d841ec833bc8dfdab731432fe68f1a38daeb4c9100653763f16bfb4336fba11c9b0b9730a9817e17a140704a7c4aa5c087  transmission-2.93.tar.xz
+d31275fba7eb322510f9667e66a186d626889a6e3143be2923aae87b9c35c5cf0c508639f1cb8c1b88b1e465bc082d80bb1101385ebde736a34d4eeeae0f6e15  transmission-daemon.initd
+a3b9ac2b7bbe30e33060c8b6a693dc7072d3c6ac44f92ddd567969d8f57a0bfc1a561e781ae167703ccb4b2fd5b0e6d8f8a66c5ba14fe01d8d89a501d4501474  transmission-daemon.confd
+57b9968b851cd8727f17fba2a34e0a51efbdb091a148f17b24973b846a11cc16a1b2e971bc45b47bdef1e37acc926926930ed7bb2f6497e5a9966b2c7d673299  libressl.patch
+58cbd951ebb8fa65a40335fe6b131f53e76ba636a105b1d239640b428ee0371ac370e542abb9cdc6d328175cf52046aba3d5b45591b9afbf3d4b538b79ab579d  magnet.patch"

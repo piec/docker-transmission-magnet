@@ -1,0 +1,26 @@
+--- orig/daemon/daemon.c	2016-02-23 14:22:59.000000000 +1000
++++ new/daemon/daemon.c	2016-03-08 03:08:22.687500000 +1000
+@@ -192,12 +192,21 @@ onFileAdded (tr_watchdir_t   dir,
+ {
+     tr_session * session = context;
+ 
+-    if (!tr_str_has_suffix (name, ".torrent"))
++    if (!tr_str_has_suffix (name, ".torrent") && !tr_str_has_suffix (name, ".magnet"))
+         return TR_WATCHDIR_IGNORE;
+ 
+     char * filename = tr_buildPath (tr_watchdir_get_path (dir), name, NULL);
+     tr_ctor * ctor = tr_ctorNew (session);
+-    int err = tr_ctorSetMetainfoFromFile (ctor, filename);
++    int err;
++    if (tr_str_has_suffix (name, ".torrent"))
++        err = tr_ctorSetMetainfoFromFile (ctor, filename);
++    else {
++        char * link;
++        size_t    len;
++        link = (char*)tr_loadFile (filename, &len, NULL);
++        err = tr_ctorSetMetainfoFromMagnetLink (ctor, link);
++        tr_free(link);
++    }
+ 
+     if (!err)
+     {
