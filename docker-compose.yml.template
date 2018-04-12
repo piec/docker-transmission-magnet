@@ -16,7 +16,6 @@ services:
       - "53121:53121/udp"
     labels:
       - "traefik.enable=true"
-      #- "traefik.docker.network=web"
       - "traefik.frontend.rule=Host:< DOMAIN.COM >;PathPrefix:/transmission"
       - "traefik.port=9091"
       #- "traefik.frontend.auth.basic=<...>"
