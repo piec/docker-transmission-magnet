@@ -23,5 +23,5 @@ docker run -it --name transmission \
 ```
 See also https://github.com/linuxserver/docker-transmission#usage
 
-Alternately you can use `docker-compose` + traefik with the template `docker-compose.yml` file
+Alternately you can use `docker-compose` + [traefik](https://docs.traefik.io/) with the template `docker-compose.yml` file
 
