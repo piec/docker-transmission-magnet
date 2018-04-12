@@ -1,3 +1,6 @@
+[![Docker Build Status](https://img.shields.io/docker/build/piec/transmission-magnet.svg)](https://hub.docker.com/r/piec/transmission-magnet/)
+[![](https://images.microbadger.com/badges/image/piec/transmission-magnet.svg)](https://microbadger.com/images/piec/transmission-magnet "Get your own image badge on microbadger.com")
+
 # docker-transmission-magnet
 docker image for transmission with support of magnet link files watch
 
@@ -24,4 +27,3 @@ docker run -it --name transmission \
 See also https://github.com/linuxserver/docker-transmission#usage
 
 Alternately you can use `docker-compose` + [traefik](https://docs.traefik.io/) with the template `docker-compose.yml` file
-
