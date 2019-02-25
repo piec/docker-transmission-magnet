@@ -1,5 +1,17 @@
+#FROM andyshinn/alpine-abuild:v11
+FROM piec/docker-alpine-build:v11
+
+RUN mkdir ~/work
+COPY apk /home/builder/work
+WORKDIR /home/builder/work
+
+RUN abuild-keygen -a
+RUN sudo apk update
+RUN abuilder -r
+
 FROM lsiobase/alpine:3.12
 
+COPY --from=0 /packages /packages
 # set version label
 ARG BUILD_DATE
 ARG VERSION
@@ -18,18 +30,14 @@ RUN \
 	python3 \
 	rsync \
 	tar \
-	transmission-cli \
-	transmission-daemon \
 	unrar \
-	unzip && \
- echo "**** install transmission ****" && \
- if [ -z ${TRANSMISSION_VERSION+x} ]; then \
-	TRANSMISSION_VERSION=$(curl -s http://dl-cdn.alpinelinux.org/alpine/v3.12/community/x86_64/ \
-	| awk -F '(transmission-cli-|.apk)' '/transmission-cli.*.apk/ {print $2}'); \
- fi && \
- apk add --no-cache \
-	transmission-cli==${TRANSMISSION_VERSION} \
-	transmission-daemon==${TRANSMISSION_VERSION} && \
+	unzip
+
+RUN apk add --no-cache \
+    --allow-untrusted --repository /packages/builder \
+    transmission-cli transmission-daemon
+
+RUN \
  echo "**** install third party themes ****" && \
  curl -o \
 	/tmp/combustion.zip -L \

@@ -1,0 +1,30 @@
+version: '3'
+services:
+  transmission:
+    container_name: transmission
+    image: piec/transmission-magnet:latest
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config:/config
+      - ./watch:/watch
+      - ./downloads:/downloads
+    networks:
+      - transmission
+    ports:
+      - "53121:53121" # bittorrent listening port
+      - "53121:53121/udp"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:< DOMAIN.COM >;PathPrefix:/transmission"
+      - "traefik.port=9091"
+      #- "traefik.frontend.auth.basic=<...>"
+    healthcheck:
+      disable: true
+    environment:
+      - PUID=1000
+      - PGID=1000
+
+networks:
+  transmission:
+    driver: bridge
