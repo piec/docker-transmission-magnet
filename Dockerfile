@@ -1,5 +1,17 @@
+#FROM andyshinn/alpine-abuild:v8
+FROM piec/docker-alpine-build:v8
+
+RUN mkdir ~/work
+COPY apk /home/builder/work
+WORKDIR /home/builder/work
+
+RUN abuild-keygen -a
+RUN sudo apk update
+RUN abuilder -r
+
 FROM lsiobase/alpine:3.9
 
+COPY --from=0 /packages /packages
 # set version label
 ARG BUILD_DATE
 ARG VERSION
@@ -17,10 +29,14 @@ RUN \
 	python \
 	rsync \
 	tar \
-	transmission-cli \
-	transmission-daemon \
 	unrar \
-	unzip && \
+	unzip
+
+RUN apk add --no-cache \
+    --allow-untrusted --repository /packages/builder \
+    transmission-cli transmission-daemon
+
+RUN \
  echo "**** install third party themes ****" && \
  curl -o \
 	/tmp/combustion.zip -L \
