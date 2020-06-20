@@ -6,7 +6,6 @@ COPY apk /home/builder/work
 WORKDIR /home/builder/work
 
 RUN abuild-keygen -a
-RUN sudo apk update
 RUN abuilder -r
 
 FROM lsiobase/alpine:3.12

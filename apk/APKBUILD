@@ -1,50 +1,49 @@
-# Maintainer: Carlo Landmeter <clandmeter@gmail.com>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Carlo Landmeter <clandmeter@gmail.com>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
 pkgname=transmission
-pkgver=2.94
-pkgrel=1
+pkgver=3.00
+pkgrel=0
 pkgdesc="Lightweight GTK BitTorrent client"
-url="http://www.transmissionbt.com"
+url="https://transmissionbt.com/"
 install="transmission-daemon.pre-install transmission-daemon.post-upgrade"
 arch="all"
-license="GPL-2.0-or-later MIT"
-depends=""
+license="GPL-2.0-or-later AND MIT"
 pkgusers="transmission"
 pkggroups="transmission"
-makedepends="autoconf automake bsd-compat-headers curl-dev dbus-glib-dev
-	gconf-dev gtk+3.0-dev intltool libevent-dev libnotify-dev openssl-dev tar"
-source="https://github.com/transmission/$pkgname-releases/raw/master/$pkgname-$pkgver.tar.xz
+makedepends="cmake bsd-compat-headers curl-dev dbus-glib-dev
+	gtk+3.0-dev intltool libevent-dev libnotify-dev openssl-dev tar"
+options="!check" # no tests
+source="https://github.com/transmission/transmission-releases/raw/master/transmission-$pkgver.tar.xz
 	transmission-daemon.initd
 	transmission-daemon.confd
-	magnet.patch"
-subpackages="$pkgname-cli $pkgname-daemon $pkgname-doc $pkgname-lang"
-options="!checkroot !check"
-builddir="$srcdir/$pkgname-$pkgver"
+	disable-missing-lang.patch
+	magnet.patch
+	"
+subpackages="$pkgname-cli $pkgname-daemon $pkgname-doc $pkgname-lang $pkgname-static"
+
+# secfixes:
+#   3.00-r0:
+#     - CVE-2018-10756
 
 build() {
-	cd "$builddir"
-
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
-		--prefix=/usr \
-		--sysconfdir=/etc \
-		--mandir=/usr/share/man \
-		--infodir=/usr/share/info \
-		--localstatedir=/var \
-		--enable-utp \
-		--with-inotify \
-		--enable-cli
-	make
-}
-
-check() {
-	cd "$builddir"
-	make check
+	cmake -B build \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+		-DCMAKE_C_FLAGS="$CFLAGS" \
+		-DENABLE_GTK=TRUE \
+		-DENABLE_CLI=TRUE \
+		-DENABLE_TESTS=FALSE \
+		-DWITH_SYSTEMD=FALSE \
+		-DINSTALL_LIB=TRUE
+	make -C build
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install
+	make -C build DESTDIR="$pkgdir" install
 }
 
 daemon() {
@@ -77,7 +76,8 @@ cli() {
 		"$subpkgdir"/usr/bin/
 }
 
-sha512sums="ee411743940f2897aa0bbc351ce79f11d860075d2e9e399d60301eae8cfc453e20426ef553fc62ee43019a07c052d512f5d7972cc4411fb57b1312c2c1558da7  transmission-2.94.tar.xz
+sha512sums="eeaf7fe46797326190008776a7fa641b6341c806b0f1684c2e7326c1284832a320440013e42a37acda9fd0ee5dca695f215d6263c8acb39188c5d9a836104a61  transmission-3.00.tar.xz
 d31275fba7eb322510f9667e66a186d626889a6e3143be2923aae87b9c35c5cf0c508639f1cb8c1b88b1e465bc082d80bb1101385ebde736a34d4eeeae0f6e15  transmission-daemon.initd
 a3b9ac2b7bbe30e33060c8b6a693dc7072d3c6ac44f92ddd567969d8f57a0bfc1a561e781ae167703ccb4b2fd5b0e6d8f8a66c5ba14fe01d8d89a501d4501474  transmission-daemon.confd
-58cbd951ebb8fa65a40335fe6b131f53e76ba636a105b1d239640b428ee0371ac370e542abb9cdc6d328175cf52046aba3d5b45591b9afbf3d4b538b79ab579d  magnet.patch"
+a09db6628d618b75fe5688638256b87042987f3e3df2210a93ba0ddf5d7602150d28f2a9f85c1fbc7654b1e32be101871d24a466f2cccaf05b34abe07133edc9  disable-missing-lang.patch
+efaf9dd5dd38e093a014931608c1642ce2def58c1a7c6ad4dca2f8e821463672ceb9853db4687ca580bb25da5eac878c9895c02758c1b17c18c06404534a7f3d  magnet.patch"
